@@ -388,8 +388,11 @@ pub fn create_request(
     }
 
     // https://docs.anthropic.com/en/docs/about-claude/models/all-models#model-comparison-table
-    // Claude 3.7 supports max output tokens up to 8192
-    let max_tokens = model_config.max_tokens.unwrap_or(8192);
+    // Default to 8192 if not provided. Allow override via ANTHROPIC_MAX_TOKENS.
+    let env_max_tokens: Option<i32> = std::env::var("ANTHROPIC_MAX_TOKENS")
+        .ok()
+        .and_then(|v| v.parse::<i32>().ok());
+    let max_tokens = model_config.max_tokens.or(env_max_tokens).unwrap_or(8192);
     let mut payload = json!({
         "model": model_config.model_name,
         "messages": anthropic_messages,
