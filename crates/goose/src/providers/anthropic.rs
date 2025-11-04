@@ -21,6 +21,7 @@ use crate::model::ModelConfig;
 use crate::providers::retry::ProviderRetry;
 use crate::providers::utils::RequestLog;
 use rmcp::model::Tool;
+use std::collections::HashMap;
 
 pub const ANTHROPIC_DEFAULT_MODEL: &str = "claude-sonnet-4-0";
 const ANTHROPIC_DEFAULT_FAST_MODEL: &str = "claude-3-7-sonnet-latest";
