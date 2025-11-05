@@ -483,7 +483,7 @@ async fn process_message_streaming(
             while let Some(result) = stream.next().await {
                 match result {
                     Ok(AgentEvent::Message(message)) => {
-                        SessionManager::add_message(&session_id, &message).await?;
+                        // SessionManager::add_message(&session_id, &message).await?;
 
                         for content in &message.content {
                             match content {
