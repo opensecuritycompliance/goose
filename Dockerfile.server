@@ -91,26 +91,28 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
       --no-default-features --features "${FEATURES}" && \
     cp /build/target/release/goose /usr/local/bin/goose
 
-# Fail the build if the fork's custom ACP methods are missing from the binary.
+# Fail the build if the fork's own ACP methods are missing from the binary.
 #
 # This exists because an image built from `main` instead of `acp-migration` is
 # indistinguishable from a correct one until runtime, where it presents as
 # `-32601: Method not found` on session/provider/update — an error CowGooseService
 # SWALLOWS. The session then runs with the wrong provider, and §4 tenant headers
 # never reach cow-mcp, so MCP calls 401 with nothing obviously wrong upstream.
-# Two hours of k8s debugging; catching it here costs a second.
 #
-# grep -a rather than `strings` so this does not depend on binutils. Release
-# stripping removes symbols, not .rodata string literals, so the method names
-# survive; if that ever stops being true this fails loudly instead of silently.
+# Only these two are checked, and only these two are worth checking. They are the
+# fork's own additions, so their absence is exactly what "built from the wrong
+# branch" looks like. The upstream session-admin methods (info, rename, export)
+# were in this list and had to come out: their literals do not survive the release
+# build's optimisation, so the check failed on a perfectly good binary. Their
+# dispatchers carry no cfg or feature gate, so they are compiled in regardless —
+# but grep cannot prove that, and a check that cries wolf is worse than none.
+#
+# grep -a rather than `strings` so this does not depend on binutils.
 RUN set -eu; \
     missing=""; \
     for m in \
       "_goose/unstable/session/provider/update" \
-      "_goose/unstable/session/extension_data/set" \
-      "_goose/unstable/session/info" \
-      "_goose/unstable/session/rename" \
-      "_goose/unstable/session/export" ; do \
+      "_goose/unstable/session/extension_data/set" ; do \
       grep -aqF "$m" /usr/local/bin/goose || missing="${missing} ${m}"; \
     done; \
     if [ -n "$missing" ]; then \

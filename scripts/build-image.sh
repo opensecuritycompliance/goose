@@ -169,12 +169,13 @@ else
   warn "image labels ($BAKED_REF @ $BAKED_SHA) do not match this checkout ($BRANCH @ ${SHA}${DIRTY})"
 fi
 
+# The fork's own two methods only. The upstream session-admin ones (info,
+# rename, export) do not keep their string literals through a release build, so
+# checking them failed on good binaries; and their presence would say nothing
+# about which branch this came from.
 MISSING=""
 for m in "_goose/unstable/session/provider/update" \
-         "_goose/unstable/session/extension_data/set" \
-         "_goose/unstable/session/info" \
-         "_goose/unstable/session/rename" \
-         "_goose/unstable/session/export" ; do
+         "_goose/unstable/session/extension_data/set" ; do
   if ! docker run --rm --entrypoint grep "$REF" -aqF "$m" /usr/local/bin/goose; then
     MISSING="$MISSING $m"
   fi
@@ -184,7 +185,7 @@ if [ -n "$MISSING" ]; then
   for m in $MISSING; do printf '  \033[31mMISSING\033[0m %s\n' "$m"; done
   die "the built image is missing fork ACP methods — do not deploy it"
 fi
-note "fork ACP methods: 5/5 present"
+note "fork ACP methods: 2/2 present"
 
 SIZE="$(docker image inspect --format '{{.Size}}' "$REF" 2>/dev/null || echo 0)"
 note "size:       $(( SIZE / 1048576 )) MiB"
