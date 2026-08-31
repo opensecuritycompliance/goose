@@ -108,3 +108,9 @@ ui/desktop/src/api/
 **/dist/
 **/__pycache__/
 **/.pytest_cache/
+
+# Not needed by Dockerfile.server, which builds only the goose binary. These are
+# ~320MB of the build context, most of it documentation videos, and every byte is
+# uploaded to the daemon on every build.
+documentation/
+ui/

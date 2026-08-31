@@ -6,6 +6,7 @@
 #   ./scripts/build-image.sh --registry ghcr.io/arul-cc --push
 #   ./scripts/build-image.sh --jobs 6                 # cap on a memory-bound builder
 #   ./scripts/build-image.sh --platform linux/amd64   # cross-build (slow, see below)
+#   ./scripts/build-image.sh --fast                   # opt-level=1, much quicker
 #
 # Tag defaults to <branch>-<short-sha>, plus "-dirty" when the tree has uncommitted
 # changes. That is deliberate: the last production incident here was an image built
@@ -32,6 +33,7 @@ JOBS=""
 FEATURES="rustls-tls"
 PLATFORM=""
 NO_CACHE=0
+FAST=0
 EXPECT_BRANCH="acp-migration"
 
 die() { printf '\033[31merror:\033[0m %s\n' "$1" >&2; exit 1; }
@@ -49,6 +51,7 @@ while [ $# -gt 0 ]; do
     --features) FEATURES="$2"; shift 2 ;;
     --platform) PLATFORM="$2"; shift 2 ;;
     --no-cache) NO_CACHE=1; shift ;;
+    --fast)     FAST=1; shift ;;
     -h|--help)  sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *)          die "unknown argument: $1" ;;
   esac
@@ -145,6 +148,12 @@ BUILD_ARGS="$BUILD_ARGS --build-arg BUILD_DATE=$BUILD_DATE"
 [ -n "$JOBS" ]     && BUILD_ARGS="$BUILD_ARGS --build-arg BUILD_JOBS=$JOBS"
 [ -n "$PLATFORM" ] && BUILD_ARGS="$BUILD_ARGS --platform $PLATFORM"
 [ "$NO_CACHE" -eq 1 ] && BUILD_ARGS="$BUILD_ARGS --no-cache"
+if [ "$FAST" -eq 1 ]; then
+  # Trades run-time optimisation for compile time. Fine for a network-bound
+  # server; not what you want for anything CPU-bound.
+  BUILD_ARGS="$BUILD_ARGS --build-arg OPT_LEVEL=1 --build-arg CODEGEN_UNITS=256"
+  note "profile:   fast (opt-level=1, codegen-units=256)"
+fi
 
 START=$(date +%s)
 # shellcheck disable=SC2086

@@ -79,6 +79,19 @@ ARG BUILD_JOBS=0
 #   --build-arg FEATURES=rustls-tls,code-mode
 ARG FEATURES=rustls-tls
 
+# Almost all of a release build is LLVM optimising code, and this server spends
+# its life waiting on a remote LLM and a local SQLite file — it is not CPU-bound,
+# so most of that work buys nothing at run time.
+#
+#   --build-arg OPT_LEVEL=1 --build-arg CODEGEN_UNITS=256
+#
+# cuts a cold build substantially. Defaults are cargo's own release settings, so
+# the image is unchanged unless you ask for the faster build.
+ARG OPT_LEVEL=3
+ARG CODEGEN_UNITS=16
+ENV CARGO_PROFILE_RELEASE_OPT_LEVEL=${OPT_LEVEL} \
+    CARGO_PROFILE_RELEASE_CODEGEN_UNITS=${CODEGEN_UNITS}
+
 # Cache mounts keep the registry and target dir across builds. The binary lives
 # inside the cached target dir, which is not part of the image layer, so it must
 # be copied out inside the same RUN.
