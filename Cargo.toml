@@ -62,7 +62,7 @@ thiserror = { version = "1.0.49", default-features = false }
 tokio = { version = "1.48", default-features = false }
 tokio-stream = { version = "0.1.16", default-features = false }
 tokio-util = { version = "0.7.12", default-features = false }
-tower-http = { version = "0.6.8", default-features = false }
+tower-http = { version = "0.7.1", default-features = false }
 tracing = { version = "0.1.43", default-features = false, features = ["std"] }
 tracing-appender = { version = "0.2.1", default-features = false }
 tracing-futures = { version = "0.2.4", default-features = false, features = ["futures-03", "std", "std-future"] }
